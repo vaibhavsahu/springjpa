@@ -4,6 +4,7 @@ import org.apache.tomcat.dbcp.dbcp2.BasicDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -15,18 +16,15 @@ import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.Properties;
 
+import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.H2;
+
 @Configuration
 @EnableTransactionManagement
 public class DBConfig {
 
     @Bean
     public DataSource dataSource(){
-        DataSource dataSource = new BasicDataSource();
-        ((BasicDataSource) dataSource).setDriverClassName("org.h2.Driver");
-        ((BasicDataSource) dataSource).setUrl("jdbc:h2:mem:testdb");
-        ((BasicDataSource) dataSource).setUsername( "sa" );
-        ((BasicDataSource) dataSource).setPassword( "password" );
-        return dataSource;
+        return new EmbeddedDatabaseBuilder().setType(H2).build();
     }
 
     @Bean
@@ -52,16 +50,14 @@ public class DBConfig {
     }
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory()
+    public EntityManagerFactory entityManagerFactory(DataSource dataSource, JpaVendorAdapter jpaVendorAdapter)
     {
-        LocalContainerEntityManagerFactoryBean em
+        LocalContainerEntityManagerFactoryBean emf
                 = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(dataSource());
-        em.setPackagesToScan(new String[] { "com.vaibhav.example.springjpa" });
-        JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        em.setJpaVendorAdapter(vendorAdapter);
-        em.setJpaProperties(additionalProperties());
-        return em;
+        emf.setDataSource(dataSource);
+        emf.setPackagesToScan(new String[] { "com.vaibhav.example.springjpa" });
+        emf.setJpaVendorAdapter(jpaVendorAdapter);
+        emf.afterPropertiesSet();
+        return emf.getObject();
     }
-
 }
