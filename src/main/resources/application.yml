@@ -12,3 +12,5 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create-drop
+  jmx:
+    default-domain: test

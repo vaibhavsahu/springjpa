@@ -1,10 +1,14 @@
 package com.vaibhav.example.springjpa.Config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.tomcat.dbcp.dbcp2.BasicDataSource;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jmx.support.RegistrationPolicy;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -20,11 +24,20 @@ import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.
 
 @Configuration
 @EnableTransactionManagement
+@EnableMBeanExport(registration= RegistrationPolicy.IGNORE_EXISTING)
 public class DBConfig {
 
     @Bean
-    public DataSource dataSource(){
-        return new EmbeddedDatabaseBuilder().setType(H2).build();
+    public DataSource dataSource(final DataSourceProperties dataSourceProperties){
+        final HikariDataSource dataSource = (HikariDataSource) dataSourceProperties.initializeDataSourceBuilder()
+                .username("sa")
+                .password("")
+                .build();
+
+        dataSource.setMaximumPoolSize(10);
+        dataSource.setRegisterMbeans(true);
+
+        return dataSource;
     }
 
     @Bean
